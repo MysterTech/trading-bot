@@ -77,6 +77,9 @@ async function waitTransaction(txHash) {
   }
   console.log("Transaction " + txHash + " is mined.");
   console.log("transaction details :" + tx);
+  for (let index = 0; index < tx.logs.length; index++) {
+    if (tx.logs[index] != 0) console.log(tx.logs[index]);
+  }
   return tx.status;
 }
 
