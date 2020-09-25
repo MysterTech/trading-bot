@@ -69,11 +69,14 @@ function sleep(ms) {
 
 async function waitTransaction(txHash) {
   let tx = null;
+  let counter = 1;
   while (tx == null) {
     tx = await web3.eth.getTransactionReceipt(txHash);
+    console.log("checking reciept :" + counter + " time.");
     await sleep(2000);
   }
-  console.log("Transaction " + txHash + " was mined.");
+  console.log("Transaction " + txHash + " is mined.");
+  console.log("transaction details :" + tx);
   return tx.status;
 }
 
@@ -101,7 +104,7 @@ async function getQuote(fromToken, toToken, amount, callback) {
   let quote = null;
   try {
     quote = await onesplitContract.methods
-      .getExpectedReturn(fromToken, toToken, amount, 100, 0)
+      .getExpectedReturn(fromToken, toToken, amount, 1, 0)
       .call();
   } catch (error) {
     console.log("Impossible to get the quote", error);
@@ -127,16 +130,17 @@ let amountWithDecimals = new BigNumber(amountToExchange)
   .toFixed();
 
 getQuote(fromToken, toToken, amountWithDecimals, function (quote) {
-  let amountWithGas = new BigNumber(85)
+  /* let amountWithGas = new BigNumber(85)
     .shiftedBy(fromTokenDecimals / 2)
-    .plus(amountWithDecimals);
-  approveToken(ethToken, onesplitAddress, amountWithGas, async function () {
+    .plus(amountWithDecimals); */
+  approveToken(ethToken, onesplitAddress, amountWithEther, async function () {
     //let minReturn = new BigNumber(quote.returnAmount).multipliedBy(0.998);
     console.log("Getting initial balances");
     // We get the balance before the swap just for logging purpose
     let ethBalanceBefore = await web3.eth.getBalance(fromAddress);
     let kncBalanceBefore = await kncToken.methods.balanceOf(fromAddress).call();
-
+    console.log("Ether starting balance : " + ethBalanceBefore);
+    console.log("KNC starting balance : " + kncBalanceBefore);
     console.log("Starting swap");
     onesplitContract.methods
       .swap(
@@ -147,7 +151,7 @@ getQuote(fromToken, toToken, amountWithDecimals, function (quote) {
         quote.distribution,
         0
       )
-      .send({ from: fromAddress, gas: 85000000000 }, async function (
+      .send({ from: fromAddress, gas: 30000000000000000 }, async function (
         error,
         txHash
       ) {
